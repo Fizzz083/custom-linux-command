@@ -7,6 +7,7 @@
 #define  BLUE  "\x1B[34m"
 #define  BOLDGREEN  "\033[1m\033[32m"
 #define  BOLDBLUE    "\x1b[1m\x1b[34m"
+#define  BOLDRED     "\x1b[1m\x1b[31m"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -35,6 +36,23 @@ struct node
 
 };
 
+char *func(char *c)
+{
+	char *tm = c;
+	
+	for(int i=0;i<strlen(c);i++)
+	{
+		if(c[i]>='A' && c[i]<='Z')
+		{
+			tm[i] = 'A'-65+'a';
+		}
+		
+	}
+	
+	return tm;
+	
+}
+
 struct node *allinfo ;
 int size = 0;
 long long int total_count = 0;
@@ -47,16 +65,18 @@ void show()
     if(l==0) {
         for(int i=0; i<size; i++)
         {
-            if(strcmp(allinfo[i].name, ".")==0 || strcmp(allinfo[i].name, "..")==0)
+            if(strcmp(allinfo[i].name, ".")==0 || strcmp(allinfo[i].name, "..")==0 || allinfo[i].name[0]=='.')
             {
                 if(a==0) continue;
             }
 
             printf("%s%s  ",allinfo[i].color, allinfo[i].name);
+            printf("%s", NORMAL_COLOR);
             //printf("%s %-10s %-10ld\n", allinfo[i].color, allinfo[i].name, allinfo[i].blocksize);
         }
-        
+
         printf("\n");
+        printf("%s", NORMAL_COLOR);
     }
     else {
 
@@ -68,23 +88,24 @@ void show()
         printf("total %lld\n",total_count);
         for(int i=0; i<size; i++)
         {
-			if(strcmp(allinfo[i].name, ".")==0 || strcmp(allinfo[i].name, "..")==0)
+            if(strcmp(allinfo[i].name, ".")==0 || strcmp(allinfo[i].name, "..")==0 || allinfo[i].name[0]=='.')
             {
                 if(a==0) continue;
             }
-			
-			printf("%s", NORMAL_COLOR);
 
-            printf("%-10s %-2lld %s %s %-5lld %-20s",allinfo[i].mode, allinfo[i].link, allinfo[i].user_name,
-                   allinfo[i].group_name, allinfo[i].blocksize/2,
+            printf("%s", NORMAL_COLOR);
+
+            printf("%-10s %-2lld %s %s %-8lld %-20s",allinfo[i].mode, allinfo[i].link, allinfo[i].user_name,
+                   allinfo[i].group_name, allinfo[i].blocksize,
                    allinfo[i].last_access_time );
             printf(" %s%s\n", allinfo[i].color, allinfo[i].name );
+            printf("%s", NORMAL_COLOR);
             //printf("\n");
         }
 
     }
 
-   // printf("\n");
+    // printf("\n");
 }
 
 
@@ -95,6 +116,12 @@ void alphabetically_sort()
     {
         for(int j=0; j<size - i -1; j++)
         {
+			//char *p =malloc(strlen(allinfo[j].name+2)); 
+			//strcpy(p, allinfo[j].name);
+			//char *g = malloc(strlen(allinfo[j+1].name+2)); 
+			//strcpy(g,allinfo[j+1].name);
+			//if(i==0 )
+			//printf("%s %s\n", func(g),g);
             if(strcmp(allinfo[j].name, allinfo[j+1].name)>0)
             {
                 struct node tmp = allinfo[j];
@@ -180,7 +207,7 @@ void init()
             allinfo[size].name = dir->d_name;
             allinfo[size].blocksize = buf.st_size;
             allinfo[size].link = buf.st_nlink;
-            strcpy(allinfo[size].last_access_time ,time);
+            strcpy(allinfo[size].last_access_time,time);
             allinfo[size].user_name = pw->pw_name;
             allinfo[size].group_name =  gr->gr_name;
             allinfo[size].mode =mode;
@@ -195,12 +222,16 @@ void init()
             {
                 allinfo[size].color = BOLDGREEN;
             }
-            else
+            else if(buf.st_nlink==1 && allinfo[size].blocksize>= 1000000)
+            {
+				allinfo[size].color = BOLDRED;
+			}
+            else 
             {
                 allinfo[size].color = NORMAL_COLOR;
 
             }
-            
+
             //printf("%s\n",allinfo[size].last_access_time);
 
             //printf("%s -- %s\n", dir->d_name, dir->d_type);
@@ -223,13 +254,21 @@ void init()
 int main(int argc, char **argv)
 {
     init();
+    
+    printf("%s", NORMAL_COLOR);
 
     //printf("%d\n", size);
 
     for(int i=1; i<argc; i++) {
         if(strcmp(argv[i], "-a")==0) a=1;
-        if(strcmp(argv[i], "-l")==0) l=1;
-        if(strcmp(argv[i], "-t")==0) t=1;
+        else if(strcmp(argv[i], "-l")==0) l=1;
+        else if(strcmp(argv[i], "-t")==0) t=1;
+        else
+        {
+            printf("Wrong Command. \n Again. Thanks\n");
+            return 0;
+        }
+
     }
 
     //int v1 = a==1?1:0 ;
@@ -245,6 +284,8 @@ int main(int argc, char **argv)
         withtime_sort();
 
     show();
+    
+    printf("%s", NORMAL_COLOR);
 
     free(allinfo);
 
