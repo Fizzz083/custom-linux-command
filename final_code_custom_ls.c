@@ -38,19 +38,19 @@ struct node
 
 char* func(char *c)
 {
-	char *tm = c;
-	
-	for(int i=0;i<strlen(c);i++)
-	{
-		if(c[i]>='A' && c[i]<='Z')
-		{
-			tm[i] = c[i]-65+'a';
-		}
-		
-	}
-	
-	return tm;
-	
+    char *tm = c;
+
+    for(int i=0; i<strlen(c); i++)
+    {
+        if(c[i]>='A' && c[i]<='Z')
+        {
+            tm[i] = c[i]-65+'a';
+        }
+
+    }
+
+    return tm;
+
 }
 
 struct node *allinfo ;
@@ -65,7 +65,7 @@ void show()
     if(l==0) {
         for(int i=0; i<size; i++)
         {
-            if(strcmp(allinfo[i].name, ".")==0 || strcmp(allinfo[i].name, "..")==0 || allinfo[i].name[0]=='.')
+            if( allinfo[i].name[0]=='.')
             {
                 if(a==0) continue;
             }
@@ -79,16 +79,14 @@ void show()
         printf("%s", NORMAL_COLOR);
     }
     else {
-		 for(int i=0; i<size; i++)
+        
+        
+        if(a!=0)
         {
-            if(strcmp(allinfo[i].name, ".")==0 || strcmp(allinfo[i].name, "..")==0 || allinfo[i].name[0]=='.')
-            {
-                if(a==0) continue;
-            }
-            total_count+=(allinfo[i].block_count)/2;
+			total_count+=tmpdot;
 		}
 
-        
+
 
         printf("total %lld\n",total_count);
         for(int i=0; i<size; i++)
@@ -121,14 +119,14 @@ void alphabetically_sort()
     {
         for(int j=0; j<size - i -1; j++)
         {
-			char *p =malloc((int)strlen(allinfo[j].name)); 
-			strcpy(p, allinfo[j].name);
-			char *g = malloc((int)strlen(allinfo[j+1].name)); 
-			strcpy(g,allinfo[j+1].name);
-			//if(i==0 )
-			if(strcmp(func(p), func(g))>0)
-			//printf("%s %s\n", func(g),g);
-           // if(strcmp(allinfo[j].name, allinfo[j+1].name)>0)
+            char *p =malloc((int)strlen(allinfo[j].name));
+            strcpy(p, allinfo[j].name);
+            char *g = malloc((int)strlen(allinfo[j+1].name));
+            strcpy(g,allinfo[j+1].name);
+            //if(i==0 )
+            if(strcmp(func(p), func(g))>0)
+                //printf("%s %s\n", func(g),g);
+                // if(strcmp(allinfo[j].name, allinfo[j+1].name)>0)
             {
                 struct node tmp = allinfo[j];
                 allinfo[j] = allinfo[j+1];
@@ -230,9 +228,9 @@ void init()
             }
             else if(buf.st_nlink==1 && allinfo[size].blocksize>= 1000000)
             {
-				allinfo[size].color = BOLDRED;
-			}
-            else 
+                allinfo[size].color = BOLDRED;
+            }
+            else
             {
                 allinfo[size].color = NORMAL_COLOR;
 
@@ -243,12 +241,14 @@ void init()
             //printf("%s -- %s\n", dir->d_name, dir->d_type);
             size++;
 
+            if( allinfo[size-1].name[0]=='.')
+            {
+                tmpdot+=(long long int)(buf.st_blocks/2);
 
-            //if( strcmp(dir->d_name, ".")!=0 && strcmp(dir->d_name, "..")!=0 )
-                //total_count+=(long long int)(buf.st_blocks/2);
-            //else {
-                //tmpdot+=(long long int)(buf.st_blocks/2);
-            //}
+            }
+            else {
+                total_count+=(long long int)(buf.st_blocks/2);
+            }
 
         }
 
@@ -258,7 +258,7 @@ void init()
 
 void wrong()
 {
-	printf(" %sWrong Command.. \n%s   -l   : use a long listing format\n   -a   : do not ignore entries starting with .\n   -t   : sort by modification time, newest first\n ", BOLDRED, NORMAL_COLOR);
+    printf(" %sWrong Command.. \n%s   -l   : use a long listing format\n   -a   : do not ignore entries starting with .\n   -t   : sort by modification time, newest first\n ", BOLDRED, NORMAL_COLOR);
 }
 
 
@@ -266,7 +266,7 @@ void wrong()
 int main(int argc, char **argv)
 {
     init();
-    
+
     printf("%s", NORMAL_COLOR);
 
     //printf("%d\n", size);
@@ -277,8 +277,8 @@ int main(int argc, char **argv)
         else if(strcmp(argv[i], "-t")==0) t=1;
         else
         {
-           // printf("Wrong Command. \n Again. Thanks\n");
-           wrong();
+            // printf("Wrong Command. \n Again. Thanks\n");
+            wrong();
             return 0;
         }
 
@@ -297,7 +297,7 @@ int main(int argc, char **argv)
         withtime_sort();
 
     show();
-    
+
     printf("%s", NORMAL_COLOR);
 
     free(allinfo);
