@@ -16,7 +16,9 @@
 #include <pwd.h>
 #include <grp.h>
 #include <ctype.h>
+//#include <ctype.h>
 
+int cnt_chk = 0;
 
 struct node
 {
@@ -26,8 +28,8 @@ struct node
          *user_name,
          *group_name,
          *mode
-
          ;
+    bool name_with_space;
     long int link;
     long int blocksize;
     long int block_count;
@@ -36,18 +38,57 @@ struct node
 
 };
 
-char* func(char *c)
+int max(int i, int j)
 {
-    char *tm = c;
+    if(i>j) return i;
+    return j;
 
-    for(int i=0; i<strlen(c); i++)
+}
+
+int space_ase = 0;
+
+char* func(char *c, int max_size, int main_size)
+{
+    char *tm = malloc(max_size);
+    //strcpy(tm, c);
+
+    int f = 0;
+    int r = 0;
+
+    for(int i=0; i<max_size; i++)
     {
-        if(c[i]>='A' && c[i]<='Z')
+        if(i<main_size && !((c[i]>='a' && c[i]<='z') || (c[i]>='A' && c[i]<='Z') || (c[i]=='.')))
         {
-            tm[i] = c[i]-65+'a';
+            space_ase  = 1;
         }
 
+        if(c[i]=='.' && r==0 ) {
+            r=1;
+            //continue;
+        }
+
+        if(i>=max_size)
+        {
+            tm[i-r]='#';
+            continue;
+        }
+        else if(((c[i]>='a' && c[i]<='z') || (c[i]>='A' && c[i]<='Z')))
+        {
+            tm[i-r] = tolower(c[i]);
+        }
+        
     }
+
+    if(r)
+    {
+        tm[max_size-1]='#';
+    }
+
+    //if(cnt_chk<=5 && r) {
+        //printf("%s %d %d\n", tm, main_size, max_size);
+        //cnt_chk++;
+    //}
+
 
     return tm;
 
@@ -69,22 +110,23 @@ void show()
             {
                 if(a==0) continue;
             }
-
-            printf("%s%s  ",allinfo[i].color, allinfo[i].name);
+           
+            printf("%s%s \n",allinfo[i].color, allinfo[i].name);
             printf("%s", NORMAL_COLOR);
             //printf("%s %-10s %-10ld\n", allinfo[i].color, allinfo[i].name, allinfo[i].blocksize);
         }
 
-        printf("\n");
+        //printf("\v");
         printf("%s", NORMAL_COLOR);
+       // getch();
     }
     else {
-        
-        
+
+
         if(a!=0)
         {
-			total_count+=tmpdot;
-		}
+            total_count+=tmpdot;
+        }
 
 
 
@@ -119,14 +161,32 @@ void alphabetically_sort()
     {
         for(int j=0; j<size - i -1; j++)
         {
-            char *p =malloc((int)strlen(allinfo[j].name));
+            int s_size_max= max((int)strlen(allinfo[j].name), (int)strlen(allinfo[j+1].name));
+
+            char *p =malloc(s_size_max);
             strcpy(p, allinfo[j].name);
-            char *g = malloc((int)strlen(allinfo[j+1].name));
+            char *g = malloc(s_size_max);
             strcpy(g,allinfo[j+1].name);
             //if(i==0 )
-            if(strcmp(func(p), func(g))>0)
-                //printf("%s %s\n", func(g),g);
-                // if(strcmp(allinfo[j].name, allinfo[j+1].name)>0)
+            space_ase = 0;
+            p = func(p, s_size_max, (int)strlen(allinfo[j].name));
+
+
+            if(space_ase == 1)
+            {
+                allinfo[j].name_with_space = 1;
+            }
+            space_ase = 0;
+            g= func(g, s_size_max, (int)strlen(allinfo[j+1].name));
+            if(space_ase == 1)
+            {
+                allinfo[j+1].name_with_space = 1;
+            }
+
+            //printf("%s %s\n", p, g);
+
+
+            if(strcmp(p,g) >0)
             {
                 struct node tmp = allinfo[j];
                 allinfo[j] = allinfo[j+1];
@@ -187,12 +247,13 @@ void init()
 
 
 
-        if(stat(ne, &buf)==0) {
+        if(stat(ne, &buf)==0)
+        {
             if(size!=0)
                 allinfo = (struct node*)realloc(allinfo, sizeof(struct node)*(size+1));
             else
             {
-                allinfo  = (struct node*)malloc(sizeof(struct node));;
+                allinfo  = (struct node*)malloc(sizeof(struct node));
             }
             char time[50];
             strftime(time, 50, "%Y-%m-%d %H:%M:%S", localtime(&buf.st_mtime));
